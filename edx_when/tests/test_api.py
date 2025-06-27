@@ -165,7 +165,6 @@ class TestUpdateAssignmentDatesForCourse(TestCase):
         with self.assertRaises(Exception):
             update_or_create_assignments_due_dates(self.course_key, [assignment])
 
-
 class TestGetUserDates(TestCase):
     """
     Test cases for the get_user_dates API function.
@@ -180,8 +179,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -194,7 +193,7 @@ class TestGetUserDates(TestCase):
 
         expected_key = (block_key, 'due')
         self.assertIn(expected_key, result)
-        self.assertEqual(result[expected_key], datetime(2023, 1, 15, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(result[expected_key], datetime(2023, 1, 15, 10, 0, 0))
 
     def test_get_user_dates_with_user_overrides(self):
         """
@@ -205,8 +204,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        content_date = ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        content_date = models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -216,7 +215,7 @@ class TestGetUserDates(TestCase):
         )
 
         user = User.objects.create(username='testuser', id=user_id)
-        UserDate.objects.create(
+        models.UserDate.objects.create(
             user=user,
             content_date=content_date,
             abs_date=datetime(2023, 1, 20, 10, 0, 0)
@@ -226,7 +225,7 @@ class TestGetUserDates(TestCase):
 
         expected_key = (block_key, 'due')
         self.assertIn(expected_key, result)
-        self.assertEqual(result[expected_key], datetime(2023, 1, 20, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(result[expected_key], datetime(2023, 1, 20, 10, 0, 0))
 
     def test_get_user_dates_with_block_type_filter(self):
         """
@@ -236,8 +235,8 @@ class TestGetUserDates(TestCase):
         user_id = 123
 
         seq_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@seq1')
-        seq_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        seq_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=seq_key,
             field='due',
@@ -247,8 +246,8 @@ class TestGetUserDates(TestCase):
         )
 
         seq_2_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@seq2')
-        seq_2_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
-        ContentDate.objects.create(
+        seq_2_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=seq_2_key,
             field='due',
@@ -271,8 +270,8 @@ class TestGetUserDates(TestCase):
         user_id = 123
 
         block1_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@seq1')
-        block1_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        block1_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block1_key,
             field='due',
@@ -282,8 +281,8 @@ class TestGetUserDates(TestCase):
         )
 
         block2_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@seq2')
-        block2_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
-        ContentDate.objects.create(
+        block2_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block2_key,
             field='due',
@@ -307,8 +306,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        due_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        due_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -317,8 +316,8 @@ class TestGetUserDates(TestCase):
             block_type='sequential'
         )
 
-        start_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 10, 10, 0, 0))
-        ContentDate.objects.create(
+        start_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 10, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='start',
@@ -343,8 +342,8 @@ class TestGetUserDates(TestCase):
         seq_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@seq1')
         vert_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@vertical+block@vert1')
 
-        seq_due_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        seq_due_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=seq_key,
             field='due',
@@ -353,8 +352,8 @@ class TestGetUserDates(TestCase):
             block_type='sequential'
         )
 
-        seq_start_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 10, 10, 0, 0))
-        ContentDate.objects.create(
+        seq_start_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 10, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=seq_key,
             field='start',
@@ -363,8 +362,8 @@ class TestGetUserDates(TestCase):
             block_type='sequential'
         )
 
-        vert_due_policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
-        ContentDate.objects.create(
+        vert_due_policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 16, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=vert_key,
             field='due',
@@ -393,8 +392,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -415,8 +414,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(rel_date=timedelta(days=7))
-        ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(rel_date=timedelta(days=7))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -438,8 +437,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -463,8 +462,8 @@ class TestGetUserDates(TestCase):
         block_key_str = 'block-v1:TestX+Test+2023+type@sequential+block@test'
         block_key = UsageKey.from_string(block_key_str)
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -498,8 +497,8 @@ class TestGetUserDates(TestCase):
 
         block_key = UsageKey.from_string('block-v1:TestX+Test+2023+type@sequential+block@test')
 
-        policy = DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
-        content_date = ContentDate.objects.create(
+        policy = models.DatePolicy.objects.create(abs_date=datetime(2023, 1, 15, 10, 0, 0))
+        content_date = models.ContentDate.objects.create(
             course_id=course_id,
             location=block_key,
             field='due',
@@ -510,7 +509,7 @@ class TestGetUserDates(TestCase):
 
         user = User.objects.create(username='testuser', id=user_id)
 
-        older_override = UserDate.objects.create(
+        older_override = models.UserDate.objects.create(
             user=user,
             content_date=content_date,
             abs_date=datetime(2023, 1, 20, 10, 0, 0)
@@ -518,7 +517,7 @@ class TestGetUserDates(TestCase):
         older_override.modified = datetime(2023, 1, 1, 10, 0, 0)
         older_override.save()
 
-        newer_override = UserDate.objects.create(
+        newer_override = models.UserDate.objects.create(
             user=user,
             content_date=content_date,
             abs_date=datetime(2023, 1, 25, 10, 0, 0)
@@ -529,8 +528,7 @@ class TestGetUserDates(TestCase):
         result = api.get_user_dates(course_id, user_id)
 
         expected_key = (block_key, 'due')
-        self.assertEqual(result[expected_key], datetime(2023, 1, 25, 10, 0, 0, tzinfo=timezone.utc))
-
+        self.assertEqual(result[expected_key], datetime(2023, 1, 25, 10, 0, 0))
 
 class TestUserDateHandler(TestCase):
     """
