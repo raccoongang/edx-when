@@ -1,9 +1,13 @@
-from datetime import datetime, timedelta, timezone
+"""
+Test cases for the api module of edx-when.
+"""
+from datetime import datetime, timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey, UsageKey
-from edx_when import api, models
 
+from edx_when import api, models
 
 User = get_user_model()
 
@@ -12,7 +16,7 @@ class TestGetUserDates(TestCase):
     """
     Test cases for the get_user_dates API function.
     """
-    
+
     def test_get_user_dates_basic(self):
         """
         Test basic functionality of get_user_dates.
@@ -36,7 +40,7 @@ class TestGetUserDates(TestCase):
 
         expected_key = (block_key, 'due')
         self.assertIn(expected_key, result)
-        self.assertEqual(result[expected_key], datetime(2023, 1, 15, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(result[expected_key], datetime(2023, 1, 15, 10, 0, 0))
 
     def test_get_user_dates_with_user_overrides(self):
         """
@@ -68,7 +72,7 @@ class TestGetUserDates(TestCase):
 
         expected_key = (block_key, 'due')
         self.assertIn(expected_key, result)
-        self.assertEqual(result[expected_key], datetime(2023, 1, 20, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(result[expected_key], datetime(2023, 1, 20, 10, 0, 0))
 
     def test_get_user_dates_with_block_type_filter(self):
         """
@@ -100,7 +104,7 @@ class TestGetUserDates(TestCase):
         )
 
         result = api.get_user_dates(course_id, user_id, block_types=['sequential'])
-        
+
         self.assertEqual(len(result), 1)
         self.assertIn((seq_key, 'due'), result)
         self.assertNotIn((seq_2_key, 'due'), result)
@@ -216,11 +220,11 @@ class TestGetUserDates(TestCase):
         )
 
         result = api.get_user_dates(
-            course_id, user_id, 
-            block_types=['sequential'], 
+            course_id, user_id,
+            block_types=['sequential'],
             date_types=['due']
         )
-        
+
         self.assertEqual(len(result), 1)
         self.assertIn((seq_key, 'due'), result)
         self.assertNotIn((seq_key, 'start'), result)
@@ -266,7 +270,7 @@ class TestGetUserDates(TestCase):
             policy=policy,
             block_type='sequential'
         )
-        
+
         result = api.get_user_dates(course_id, user_id)
         self.assertEqual(len(result), 0)
 
@@ -349,7 +353,7 @@ class TestGetUserDates(TestCase):
             policy=policy,
             block_type='sequential'
         )
-        
+
         user = User.objects.create(username='testuser', id=user_id)
 
         older_override = models.UserDate.objects.create(
@@ -371,4 +375,4 @@ class TestGetUserDates(TestCase):
         result = api.get_user_dates(course_id, user_id)
 
         expected_key = (block_key, 'due')
-        self.assertEqual(result[expected_key], datetime(2023, 1, 25, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(result[expected_key], datetime(2023, 1, 25, 10, 0, 0))
