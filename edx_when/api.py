@@ -520,8 +520,8 @@ class _Assignment:
     date: datetime
     block_key: UsageKey
     assignment_type: str
-    contains_gated_content: bool
     first_component_block_id: str
+    relative_weeks_due: int
 
     def __post_init__(self):
         if not isinstance(self.date, datetime):
@@ -542,21 +542,22 @@ def update_or_create_assignments_due_dates(course_key, assignments: list[_Assign
             assignment.date,
             course_key_str
         )
-        if not all((assignment.date, assignment.title)):
+        if not all((assignment.date or assignment.relative_weeks_due, assignment.title)):
             log.warning(
-                "Skipping assignment '%s' for course %s because it has no date or title",
+                "Skipping assignment '%s' for course %s because it has no date or no relative date or title",
                 assignment,
                 course_key_str
             )
             continue
+
+        relative_weeks_timedelta = timedelta(weeks=assignment.relative_weeks_due) if assignment.relative_weeks_due else None
         models.ContentDate.objects.update_or_create(
             course_id=course_key,
             location=assignment.block_key,
             field='due',
             block_type=assignment.assignment_type,
-            contains_gated_content=assignment.contains_gated_content,
             defaults={
-                'policy': models.DatePolicy.objects.get_or_create(abs_date=assignment.date)[0],
+                'policy': models.DatePolicy.objects.get_or_create(abs_date=assignment.date, rel_date=relative_weeks_timedelta)[0],
                 'assignment_title': assignment.title,
                 'course_name': course_key.course,
                 'subsection_name': assignment.title
