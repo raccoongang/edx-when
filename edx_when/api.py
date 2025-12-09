@@ -744,11 +744,11 @@ class UserDateHandler:
         except ValidationError as error:
             raise InvalidDateError(obj.actual_date) from error
 
-    def _map_active_content_dates(self) -> dict[tuple[str, str], int]:
-        """Return a mapping of (block_key, field) → content_date_id for active ContentDates in this course."""
+    def _map_active_content_dates(self) -> dict[tuple[str, str], ContentDate]:
+        """Return a mapping of (block_key, field) -> ContentDate object for active ContentDates in this course."""
         return {
-            (str(cd.location), cd.field): cd.id
-            for cd in ContentDate.objects.filter(course_id=self.course_key, active=True)
+            (str(cd.location), cd.field): cd
+            for cd in ContentDate.objects.filter(course_id=self.course_key, active=True).select_related('policy')
         }
 
     def _build_course_dates(self, user_id: int, course_data: dict, active_content_dates: dict) -> list[UserDate]:
@@ -758,14 +758,22 @@ class UserDateHandler:
 
         for field in ("start", "end"):
             content_date_key = (course_location, field)
-            content_date_id = active_content_dates.get(content_date_key)
-            if not content_date_id:
+            content_date = active_content_dates.get(content_date_key)
+            if not content_date:
                 continue
+
+            date_kwargs = {}
+
+            if content_date.policy.rel_date is not None:
+                date_kwargs['rel_date'] = content_date.policy.rel_date
+            elif content_date.policy.abs_date is not None:
+                date_kwargs['abs_date'] = content_date.policy.abs_date
 
             user_date = UserDate(
                 user_id=user_id,
-                content_date_id=content_date_id,
+                content_date_id=content_date.id,
                 first_component_block_id=course_location,
+                **date_kwargs
             )
             self._validate(user_date)
             course_dates.append(user_date)
@@ -778,14 +786,22 @@ class UserDateHandler:
 
         for assignment in assignments:
             content_date_key = str(assignment.block_key), "due"
-            content_date_id = active_content_dates.get(content_date_key)
-            if not content_date_id:
+            content_date = active_content_dates.get(content_date_key)
+            if not content_date:
                 continue
+
+            date_kwargs = {}
+
+            if content_date.policy.rel_date is not None:
+                date_kwargs['rel_date'] = content_date.policy.rel_date
+            elif content_date.policy.abs_date is not None:
+                date_kwargs['abs_date'] = content_date.policy.abs_date
 
             user_date = UserDate(
                 user_id=user_id,
-                content_date_id=content_date_id,
+                content_date_id=content_date.id,
                 first_component_block_id=assignment.first_component_block_id,
+                **date_kwargs
             )
             self._validate(user_date)
             assignment_dates.append(user_date)
@@ -800,15 +816,22 @@ class UserDateHandler:
 
         for field in ("start", "end"):
             content_date_key = (course_location, field)
-            content_date_id = active_content_dates.get(content_date_key)
-            if not content_date_id:
+            content_date = active_content_dates.get(content_date_key)
+            if not content_date:
                 continue
 
-            user_date_key = user_id, content_date_id
-            target_map[user_date_key] = {
-                "content_date_id": content_date_id,
+            user_date_key = user_id, content_date.id
+
+            target_data = {
+                "content_date_id": content_date.id,
                 "first_component_block_id": course_location,
             }
+            if content_date.policy.rel_date is not None:
+                target_data["rel_date"] = content_date.policy.rel_date
+            elif content_date.policy.abs_date is not None:
+                target_data["abs_date"] = content_date.policy.abs_date
+
+            target_map[user_date_key] = target_data
 
         return target_map
 
@@ -819,16 +842,23 @@ class UserDateHandler:
 
         for assignment in assignments:
             content_date_key = str(assignment.block_key), "due"
-            content_date_id = active_content_dates.get(content_date_key)
-            if not content_date_id:
+            content_date = active_content_dates.get(content_date_key)
+            if not content_date:
                 continue
 
-            user_date_key = user_id, content_date_id
-            target_map[user_date_key] = {
-                "content_date_id": content_date_id,
+            user_date_key = user_id, content_date.id
+
+            target_data = {
+                "content_date_id": content_date.id,
                 "first_component_block_id": assignment.first_component_block_id,
                 "is_content_gated": assignment.contains_gated_content,
             }
+            if content_date.policy.rel_date is not None:
+                target_data["rel_date"] = content_date.policy.rel_date
+            elif content_date.policy.abs_date is not None:
+                target_data["abs_date"] = content_date.policy.abs_date
+
+            target_map[user_date_key] = target_data
 
         return target_map
 
@@ -857,6 +887,12 @@ class UserDateHandler:
                 existing_ud = existing_dates[key]
                 existing_ud.first_component_block_id = target_data.get("first_component_block_id")
                 existing_ud.is_content_gated = target_data.get("is_content_gated", False)
+                if "rel_date" in target_data:
+                    existing_ud.rel_date = target_data.get("rel_date")
+                    existing_ud.abs_date = None  # Clear abs_date when setting rel_date
+                elif "abs_date" in target_data:
+                    existing_ud.abs_date = target_data.get("abs_date")
+                    existing_ud.rel_date = None  # Clear rel_date when setting abs_date
                 to_update.append(existing_ud)
 
         return to_create, to_update
