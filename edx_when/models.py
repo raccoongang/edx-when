@@ -79,6 +79,9 @@ class DatePolicy(TimeStampedModel):
         if self.abs_date and self.rel_date:
             raise ValidationError(_("Absolute and relative dates cannot both be used"))
 
+        if not self.abs_date and not self.rel_date:
+            raise ValidationError(_("Either absolute date or relative date must be provided"))
+
 
 class ContentDate(models.Model):
     """
@@ -158,10 +161,7 @@ class UserDate(TimeStampedModel):
 
         schedule = get_schedule_for_user(self.user.id, self.content_date.course_id)  # pylint: disable=no-member
         policy_date = self.content_date.policy.actual_date(schedule)
-        if schedule and self.rel_date:
-            return policy_date + self.rel_date
-        else:
-            return policy_date
+        return policy_date
 
     @property
     def location(self):
@@ -183,6 +183,9 @@ class UserDate(TimeStampedModel):
         """
         if self.abs_date and self.rel_date:
             raise ValidationError(_("Absolute and relative dates cannot both be used"))
+
+        if not self.abs_date and not self.rel_date:
+            raise ValidationError(_("Either absolute date or relative date must be provided"))
 
         schedule = get_schedule_for_user(self.user.id, self.content_date.course_id)  # pylint: disable=no-member
         policy_date = self.content_date.policy.actual_date(schedule=schedule)
