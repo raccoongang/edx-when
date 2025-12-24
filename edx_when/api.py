@@ -530,7 +530,7 @@ class _Assignment:
             raise TypeError("block_key must be a UsageKey object")
 
 
-def update_or_create_assignments_due_dates(course_key, assignments: list[_Assignment]):
+def update_or_create_assignments_due_dates(course_key, assignments: list[_Assignment], course_display_name=None):
     """
     Update or create assignment due dates for a course.
     """
@@ -559,7 +559,7 @@ def update_or_create_assignments_due_dates(course_key, assignments: list[_Assign
             defaults={
                 'policy': models.DatePolicy.objects.get_or_create(abs_date=assignment.date, rel_date=relative_weeks_timedelta)[0],
                 'assignment_title': assignment.title,
-                'course_name': course_key.course,
+                'course_name': course_display_name,
                 'subsection_name': assignment.title
             }
         )
