@@ -16,6 +16,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 
 from . import models
 from .models import UserDate, ContentDate
+from .types import CourseRef
 from .utils import get_schedule_for_user
 
 try:
@@ -530,11 +531,13 @@ class _Assignment:
             raise TypeError("block_key must be a UsageKey object")
 
 
-def update_or_create_assignments_due_dates(course_key, assignments: list[_Assignment], course_display_name=None):
+def update_or_create_assignments_due_dates(course: CourseRef, assignments: list[_Assignment]):
     """
     Update or create assignment due dates for a course.
     """
-    course_key_str = str(course_key)
+    course_id = _ensure_key(CourseKey, course.course_key)
+    course_key_str = str(course_id)
+    course_display_name = course.course_display_name
     for assignment in assignments:
         log.info(
             "Updating assignment '%s' with due date '%s' for course %s",
@@ -552,14 +555,14 @@ def update_or_create_assignments_due_dates(course_key, assignments: list[_Assign
 
         relative_weeks_timedelta = timedelta(weeks=assignment.relative_weeks_due) if assignment.relative_weeks_due else None
         models.ContentDate.objects.update_or_create(
-            course_id=course_key,
+            course_id=course_id,
             location=assignment.block_key,
             field='due',
             block_type=assignment.assignment_type,
             defaults={
                 'policy': models.DatePolicy.objects.get_or_create(abs_date=assignment.date, rel_date=relative_weeks_timedelta)[0],
                 'assignment_title': assignment.title,
-                'course_name': course_display_name,
+                'course_name': course_display_name or course_id.course,
                 'subsection_name': assignment.title
             }
         )
